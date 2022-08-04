@@ -1,0 +1,3 @@
+set_global_assignment -name SDC_FILE ikacore_Psychic5.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE ikacore_Psychic5.sv
+set_global_assignment -name QIP_FILE rtl/Psychic5.qip
