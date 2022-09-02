@@ -28,7 +28,7 @@
         <dip bits="10,12"       name="Coinage B"    ids="5C1P,4C1P,3C1P,2C1P,1C4P,1C3P,1C2P,1C1P"/>
     </switches>
 
-    <rom index='0' md5="None" type='nonmerged' zip='psychic5j.zip'>
+    <rom index='0' md5="None" type='nonmerged' zip='psychic5j.zip|psychic5.zip'>
         <!-- banked data    0x00000-0x0ffff -->
         <part crc="72298f34" name="p5e"/>
         <!-- game program   0x10000-0x17fff -->
