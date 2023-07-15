@@ -212,20 +212,26 @@ pll pll(
 // 0         1         2         3          4         5         6   
 // 01234567890123456789012345678901 23456789012345678901234567890123
 // 0123456789ABCDEFGHIJKLMNOPQRSTUV 0123456789ABCDEFGHIJKLMNOPQRSTUV
-// X  XX  XXXX
+// X  XXX XX X XX XX  XXX X XXXX
 
 wire    [127:0] status; //status bits
 
 `include "build_id.v" 
 localparam CONF_STR = {
-    "ikacore_Psychic5;;",
+    "ikacore_Psychic5;",
     "-;",
-    "P1,Screen Settings;",
+    "P1,Scaler Settings;",
     "P1-;",
-    "P1O7,Aspect ratio,Original,Full Screen;",
-    "P1O8,Orientation,Vertial,Horizontal;",
-    "P1OA,VGA Scaler,Off,On;",
-    "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    "P1O7,Aspect ratio,original,full screen;",
+    "P1O8,Orientation,vertial,horizontal;",
+    "P1OA,VGA Scaler,off,on;",
+    "P1O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    "-;",
+    "ON,Flip,normal,flip;",
+    "OCD,Refresh rate,original,NTSC-friendly,custom;",
+    "h0OFG,H refresh rate adj,0,2,4,6;",
+    "h0OJL,V refresh rate adj,0,1,2,3,4,5,6,7;",
+    "OPS,V position,original,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7;",
     "-;",
     "DIP;",
     "-;",
@@ -262,7 +268,7 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
     .status                     (status                     ),
     .status_in                  (128'h0                     ),
 
-    .status_menumask            (16'h00                     ),
+    .status_menumask            ({15'd0, status[13]}        ),
     .direct_video               (direct_video               ),
 
     .forced_scandoubler         (forced_scandoubler         ),
@@ -293,10 +299,16 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 wire            hsync_n, vsync_n;
 wire            hblank_n, vblank_n;
 wire    [3:0]   video_r, video_g, video_b; //need to use color conversion LUT
+
 wire    [15:0]  sound;
 wire            pxcen;
 wire            master_reset = RESET | status[0] | buttons[1];
-//assign          LED_USER = ioctl_download;
+
+wire            flip = status[23];
+wire    [1:0]   pxcntr_adjust_mode = status[13:12];
+wire    [1:0]   pxcntr_adjust_h = status[16:15];
+wire    [2:0]   pxcntr_adjust_v = status[21:19];
+wire    [3:0]   vpos_adjust = status[28:25];
 
 assign          AUDIO_L = sound;
 assign          AUDIO_R = sound;
@@ -322,6 +334,12 @@ Psychic5_emu gameboard_top (
 
     .i_JOYSTICK0                (joystick_0                 ),
     .i_JOYSTICK1                (joystick_1                 ),
+
+    .i_EMU_FLIP                 (flip                       ),
+    .i_EMU_VPOS_ADJ             (vpos_adjust                ),
+    .i_EMU_PXCNTR_ADJ_MODE      (pxcntr_adjust_mode         ),
+    .i_EMU_PXCNTR_ADJ_H         (pxcntr_adjust_h            ),
+    .i_EMU_PXCNTR_ADJ_V         (pxcntr_adjust_v            ),
 
     .ioctl_index                (ioctl_index                ),
     .ioctl_download             (ioctl_download             ),
@@ -390,7 +408,6 @@ assign          FB_FORCE_BLANK = 1'b0;
 reg             rotate_ccw = 1'b1;
 wire            no_rotate = direct_video | status[7] | status[8];
 wire            video_rotated;
-reg             flip = 1'b0;
 screen_rotate screen_rotate ( .* );
 
 

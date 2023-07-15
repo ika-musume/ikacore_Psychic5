@@ -16,8 +16,6 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-`include "rtl/Psychic5_emu_header.v"
-
 module Psychic5_video
 (
     input   wire            i_EMU_MCLK,
@@ -27,6 +25,11 @@ module Psychic5_video
     output  wire            o_EMU_CLK6MNCEN_n,
 
     input   wire            i_EMU_INITRST_n,
+
+    //refresh rate adjust settings
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_MODE,
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_H,
+    input   wire    [2:0]   i_EMU_PXCNTR_ADJ_V,
 
     //CPU RW
     input   wire    [12:0]  i_ADDR_BUS,
@@ -90,6 +93,8 @@ module Psychic5_video
 
 localparam  [39:0]   initializer_buffer = 40'h4012680001;
 
+
+
 ///////////////////////////////////////////////////////////
 //////  CLOCKS
 ////
@@ -106,12 +111,10 @@ localparam  [39:0]   initializer_buffer = 40'h4012680001;
 */
 
 reg     [1:0]   cen_register = 2'b01;
-
-always @(posedge i_EMU_MCLK) 
-begin
-    if(!i_EMU_CLK12MPCEN_n) 
-    begin
-        cen_register <= ~cen_register;
+always @(posedge i_EMU_MCLK) begin
+    if(!i_EMU_INITRST_n) cen_register <= 2'b01;
+    else begin
+        if(!i_EMU_CLK12MPCEN_n) cen_register <= ~cen_register;
     end
 end
 
@@ -119,8 +122,6 @@ end
 assign  o_EMU_CLK6MPCEN_n = (cen_register[1] | i_EMU_CLK12MPCEN_n) | ~i_EMU_INITRST_n;
 assign  o_EMU_CLK6MNCEN_n = (cen_register[0] | i_EMU_CLK12MPCEN_n) | ~i_EMU_INITRST_n;
 assign  __REF_PXCEN = ~o_EMU_CLK6MPCEN_n;
-
-
 
 
 
@@ -148,10 +149,13 @@ assign  {o_ABS_4H, o_ABS_2H, o_ABS_1H} = ABS_H_CNTR[2:0];
 wire            CNTRSEL;
 
 
-N8633S N8633S_Main
-(
+N8633S N8633S_Main (
     .i_EMU_MCLK                 (i_EMU_MCLK                 ),
     .i_EMU_CLK6MPCEN_n          (o_EMU_CLK6MPCEN_n          ),
+
+    .i_EMU_PXCNTR_ADJ_MODE      (i_EMU_PXCNTR_ADJ_MODE      ),
+    .i_EMU_PXCNTR_ADJ_H         (i_EMU_PXCNTR_ADJ_H         ),
+    .i_EMU_PXCNTR_ADJ_V         (i_EMU_PXCNTR_ADJ_V         ),
 
     .i_FLIP                     (i_FLIP                     ),
     .i_CNTRSEL                  (CNTRSEL                    ),

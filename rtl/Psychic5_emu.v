@@ -42,6 +42,13 @@ module Psychic5_emu
     input   wire    [15:0]  i_JOYSTICK0,
     input   wire    [15:0]  i_JOYSTICK1,
 
+    //refresh rate adjust settings
+    input   wire            i_EMU_FLIP,
+    input   wire    [3:0]   i_EMU_VPOS_ADJ,
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_MODE,
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_H,
+    input   wire    [2:0]   i_EMU_PXCNTR_ADJ_V,
+
     //mister ioctl
     input   wire    [15:0]  ioctl_index,
     input   wire            ioctl_download,
@@ -640,8 +647,9 @@ Psychic5_screensim screensim_main (
 );
 `endif
 
-//blanking
+//sync and blanking
 wire            hsync_n, hblank_n;
+wire            vsync_n;
 
 Psychic5_top gameboard_top (
     .i_EMU_MCLK                 (i_EMU_MCLK                 ),
@@ -652,9 +660,13 @@ Psychic5_top gameboard_top (
     .i_EMU_INITRST_n            (~core_reset                ), //active low
     .i_EMU_SOFTRST_n            (~cpu_soft_reset            ),
 
+    .i_EMU_PXCNTR_ADJ_MODE      (i_EMU_PXCNTR_ADJ_MODE      ),
+    .i_EMU_PXCNTR_ADJ_H         (i_EMU_PXCNTR_ADJ_H         ),
+    .i_EMU_PXCNTR_ADJ_V         (i_EMU_PXCNTR_ADJ_V         ),
+
     .o_CSYNC_n                  (                           ),
     .o_HSYNC_n                  (hsync_n                    ),
-    .o_VSYNC_n                  (o_VSYNC_n                  ),
+    .o_VSYNC_n                  (vsync_n                    ),
     
     .o_HBLANK_n                 (hblank_n                   ),
     .o_VBLANK_n                 (o_VBLANK_n                 ),
@@ -672,7 +684,7 @@ Psychic5_top gameboard_top (
     .i_P1_BTN                   (P1_BTN                     ),
     .i_P2_BTN                   (P2_BTN                     ),
     .i_SYS_BTN                  (SYS_BTN                    ),
-    .i_DIPSW1                   (DIPSW1                     ),
+    .i_DIPSW1                   ({DIPSW1[7:1], ~i_EMU_FLIP} ),
     .i_DIPSW2                   (DIPSW2                     ),
 
     //SDRAM requests
@@ -703,9 +715,11 @@ Psychic5_top gameboard_top (
 ////
 
 reg     [9:0]   hsync_dlyline, hblank_dlyline;
-
 assign          o_HSYNC_n = hsync_dlyline[4];
 assign          o_HBLANK_n = hblank_dlyline[4];
+
+reg     [18:0]  vsync_dlyline;
+assign  o_VSYNC_n = (i_EMU_VPOS_ADJ == 4'd0) ? vsync_n : vsync_dlyline[3 + i_EMU_VPOS_ADJ];
 
 always @(posedge i_EMU_MCLK) begin
     if(o_PXCEN) begin
@@ -714,6 +728,11 @@ always @(posedge i_EMU_MCLK) begin
 
         hblank_dlyline[0] <= hblank_n;
         hblank_dlyline[9:1] <= hblank_dlyline[8:0];
+
+        if(hblank_dlyline[9:8] == 2'b10) begin
+            vsync_dlyline[0] <= vsync_n;
+            vsync_dlyline[18:1] <= vsync_dlyline[17:0];
+        end
     end
 end
 

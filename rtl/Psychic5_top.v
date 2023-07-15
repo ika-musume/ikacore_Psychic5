@@ -28,6 +28,11 @@ module Psychic5_top
     input   wire            i_EMU_INITRST_n,
     input   wire            i_EMU_SOFTRST_n,
 
+    //refresh rate adjust settings
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_MODE,
+    input   wire    [1:0]   i_EMU_PXCNTR_ADJ_H,
+    input   wire    [2:0]   i_EMU_PXCNTR_ADJ_V,
+
     //for screen recording
     output  wire            __REF_PXCEN,
     output  wire    [8:0]   __REF_HCOUNTER,
@@ -110,6 +115,10 @@ Psychic5_video video_main
     .o_EMU_CLK6MNCEN_n          (CLK6MNCEN                  ),
 
     .i_EMU_INITRST_n            (i_EMU_INITRST_n            ),
+
+    .i_EMU_PXCNTR_ADJ_MODE      (i_EMU_PXCNTR_ADJ_MODE      ),
+    .i_EMU_PXCNTR_ADJ_H         (i_EMU_PXCNTR_ADJ_H         ),
+    .i_EMU_PXCNTR_ADJ_V         (i_EMU_PXCNTR_ADJ_V         ),
 
     .i_ADDR_BUS                 (ADDR_BUS                   ),
     .o_DATA_READ_BUS            (DATA_READ_BUS              ),
