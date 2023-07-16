@@ -1,2 +1,0 @@
-//`define FASTBOOT
-//`define SIMULATION
