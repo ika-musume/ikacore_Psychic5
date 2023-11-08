@@ -49,6 +49,7 @@ module emu
     output        VGA_F1,
     output [1:0]  VGA_SL,
     output        VGA_SCALER, // Force VGA scaler
+    output        VGA_DISABLE,
 
     input  [11:0] HDMI_WIDTH,
     input  [11:0] HDMI_HEIGHT,
@@ -270,6 +271,7 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 
     .status_menumask            ({15'd0, status[13]}        ),
     .direct_video               (direct_video               ),
+    .new_vmode                  (new_vmode                  ), 
 
     .forced_scandoubler         (forced_scandoubler         ),
     .gamma_bus                  (gamma_bus                  ),
@@ -289,7 +291,13 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 );
 
 
-
+reg [1:0] video_status;
+always @(posedge CLK60M) begin
+    if (video_status != status[13:12]) begin
+        video_status <= status[13:12];
+        new_vmode <= ~new_vmode;
+    end
+end
 
 
 ///////////////////////////////////////////////////////////
@@ -372,6 +380,7 @@ Psychic5_emu gameboard_top (
 
 assign VGA_F1 = 0;
 assign VGA_SCALER = status[10];
+assign VGA_DISABLE = 0;
 assign HDMI_FREEZE = 0;
 assign FB_FORCE_BLANK = 0;
 

@@ -440,6 +440,7 @@ end
 
 //CPU board uses inverted DFFD_8F_Q[2] as an async clock. A messy solution for this.
 reg             DFFQ_8F_Q2_NCEN_n;
+
 always @(posedge i_EMU_MCLK)
 begin
     if(!o_EMU_CLK6MPCEN_n)
@@ -455,15 +456,40 @@ begin
     end
 end
 
+// Vsync adjustment for 60Hz, Adjust hsync to center image
+always @(posedge i_EMU_MCLK)
+begin
+    if(!o_EMU_CLK6MPCEN_n)
+    begin
+        if(ABS_V_CNTR >= 9'd249 && ABS_V_CNTR <= 9'd251)
+        begin
+            vsync_tune <= 1'b0;
+        end
+        else
+        begin
+            vsync_tune <= 1'b1;
+        end
+
+        if(ABS_H_CNTR > 9'd171 && ABS_H_CNTR < 9'd210)
+        begin
+            hsync_tune <= 1'b0;
+        end
+        else
+        begin
+            hsync_tune <= 1'b1;
+        end
+    end
+end
+
 //CSYNC
 wire            DMUX_7F_Y4_n =  ((ABS_V_CNTR[8] | DFFD_7H_B_Q) == 1'b1) ? 1'b1 :
                                 (ABS_V_CNTR[5:3] == 3'd4) ? 1'b0 : 1'b1; //goes low V224-231
 
 assign  o_CSYNC_n = DMUX_7F_Y4_n & DFFD_7E_B_Q_n;
-
+reg vsync_tune, hsync_tune;
 //for upscaler
-assign  o_HSYNC_n = DFFD_7E_B_Q_n;
-assign  o_VSYNC_n = DMUX_7F_Y4_n;
+assign  o_HSYNC_n = i_EMU_PXCNTR_ADJ_MODE[0] ? hsync_tune : DFFD_7E_B_Q_n;
+assign  o_VSYNC_n = i_EMU_PXCNTR_ADJ_MODE[0] ? vsync_tune : DMUX_7F_Y4_n;
 
 assign  o_HBLANK_n = DFFQ_8F_Q[3];
 assign  o_VBLANK_n = ~DFFQ_8F_Q[1];
