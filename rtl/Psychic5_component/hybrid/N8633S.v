@@ -63,7 +63,7 @@ reg     [8:0]   vertical_start, horizontal_skip;
 always @(*) begin
     case(i_EMU_PXCNTR_ADJ_MODE)
         2'd0: begin vertical_start = 9'd220; horizontal_skip = 9'd227; end //original
-        2'd1: begin vertical_start = 9'd227; horizontal_skip = 9'd219; end //ntsc-friendly
+        2'd1: begin vertical_start = 9'd249; horizontal_skip = 9'd224; end //ntsc-friendly
         2'd2: begin vertical_start = 9'd220 + i_EMU_PXCNTR_ADJ_V; horizontal_skip = 9'd227 - {i_EMU_PXCNTR_ADJ_H, 1'b0}; end //custom
         2'd3: begin vertical_start = 9'd220; horizontal_skip = 9'd227; end //unused
     endcase
